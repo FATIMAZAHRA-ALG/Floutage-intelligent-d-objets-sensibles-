@@ -73,28 +73,34 @@ def flouter_roi(frame, bbox, intensite, ellipse=False):
     flou = cv2.GaussianBlur(roi, (k, k), 0)
     if ellipse:
         mask = np.zeros(roi.shape[:2], dtype=np.uint8)
-        cx, cy = (x2-x1)//2, (y2-y1)//2
-        rx = int((x2-x1) * 0.95 / 2)  # largeur légèrement plus grande
-        ry = int((y2-y1) * 0.95 / 2)  # hauteur légèrement plus grande
-        cv2.ellipse(mask, (cx, cy), (rx, ry), 0, 0, 360, 255, -1)
+        cv2.ellipse(mask,
+                    ((x2-x1)//2, (y2-y1)//2),
+                    (int((x2-x1)*0.6), int((y2-y1)*0.6)),
+                    0, 0, 360, 255, -1)
         roi[mask == 255] = flou[mask == 255]
     else:
         roi[:] = flou
 
+    # ✅ Ajouter le symbole "Traité" directement sur la vidéo
+    cv2.putText(frame, "✓", (x1, max(y1-5,0)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+
 def cercle_progression(p):
     values = [p, 100-p]
+    colors = ["#2f87df", "#d3d3d3"]  # bleu / gris
     fig = go.Figure(go.Pie(
         values=values,
         hole=0.7,
         textinfo="none",
-        marker_colors=["#2f87df", "#a8c4ed"],
+        marker_colors=colors,
         sort=False,
         direction="clockwise",
         rotation=90
     ))
+    texte = f"✓ Traité\n{p}%\n✗ Non traité"
     fig.update_layout(
-        width=200, height=200,
-        annotations=[dict(text=f"{p}%", x=0.5, y=0.5, showarrow=False, font_size=22)],
+        width=200,
+        height=200,
+        annotations=[dict(text=texte, x=0.5, y=0.5, showarrow=False, font_size=16)],
         margin=dict(t=0,b=0,l=0,r=0),
         paper_bgcolor="rgba(0,0,0,0)"
     )
@@ -109,8 +115,8 @@ MAX_MISSED = 1
 if video_file:
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Vidéo importée")
-        st.video(video_file)  # affichage grand format importé
+        st.subheader("Avant")
+        st.video(video_file)
 
     if st.button("Lancer le floutage"):
         with st.spinner("Traitement en cours..."):
@@ -138,9 +144,9 @@ if video_file:
                     break
                 frame_id += 1
 
-                # 🔵 Détection YOLO
                 if frame_id % FRAME_STEP == 0:
                     small = cv2.resize(frame, (640, int(640*h/w)))
+
                     for key, enabled, labels in [
                         ("face", use_face, None),
                         ("alpr", use_alpr, None),
@@ -148,13 +154,16 @@ if video_file:
                     ]:
                         if not enabled:
                             continue
+
                         result = models[key](small, conf=0.4, verbose=False)[0]
                         trackers[key] = []
                         last_bboxes[key] = []
                         missed[key] = []
+
                         for box, cls in zip(result.boxes.xyxy, result.boxes.cls):
                             if labels and models[key].names[int(cls)] not in labels:
                                 continue
+
                             bbox = [
                                 box[0]*w/640,
                                 box[1]*h/small.shape[0],
@@ -171,12 +180,12 @@ if video_file:
                                 last_bboxes[key].append(safe)
                                 missed[key].append(0)
 
-                # 🔵 Tracking avec persistance
                 else:
                     for key in trackers:
                         new_trackers = []
                         new_bboxes = []
                         new_missed = []
+
                         for i, tr in enumerate(trackers[key]):
                             ok, b = tr.update(frame)
                             if ok:
@@ -194,6 +203,7 @@ if video_file:
                                     new_trackers.append(tr)
                                     new_bboxes.append(safe)
                                     new_missed.append(missed[key][i]+1)
+
                         trackers[key] = new_trackers
                         last_bboxes[key] = new_bboxes
                         missed[key] = new_missed
@@ -210,6 +220,7 @@ if video_file:
                 video_bytes = f.read()
 
             st.success("✅ Traitement terminé")
+
             with col2:
                 st.subheader("Après")
                 st.video(video_bytes)
