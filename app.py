@@ -8,7 +8,7 @@ import numpy as np
 # =========================
 # CONFIG STREAMLIT
 # =========================
-st.set_page_config(page_title="Floutage Vidéo Intelligent", layout="wide")
+st.set_page_config(page_title="🎥 Floutage Vidéo Intelligent", layout="wide")
 
 st.markdown("""
 <style>
@@ -22,7 +22,7 @@ button[kind="primary"] { background: linear-gradient(135deg, #80bfff, #3399ff) !
 # =========================
 # TITRE
 # =========================
-st.title("Floutage automatique de vidéo")
+st.title("🎥 Floutage automatique de vidéo")
 st.write("Floutez vos **visages**, **plaques** et **écrans** facilement")
 
 # =========================
@@ -42,7 +42,7 @@ OBJETS_COCO = ["laptop", "cell phone", "tv"]
 # =========================
 # OPTIONS
 # =========================
-st.sidebar.title("Options : ")
+st.sidebar.title("⚙️ Options")
 use_face = st.sidebar.checkbox("Flouter les visages", True)
 use_alpr = st.sidebar.checkbox("Flouter les plaques", True)
 use_coco = st.sidebar.checkbox("Flouter les écrans", True)
@@ -73,10 +73,10 @@ def flouter_roi(frame, bbox, intensite, ellipse=False):
     flou = cv2.GaussianBlur(roi, (k, k), 0)
     if ellipse:
         mask = np.zeros(roi.shape[:2], dtype=np.uint8)
-        cv2.ellipse(mask,
-                    ((x2-x1)//2, (y2-y1)//2),
-                    ((x2-x1)//2, (y2-y1)//2),
-                    0, 0, 360, 255, -1)
+        cx, cy = (x2-x1)//2, (y2-y1)//2
+        rx = int((x2-x1) * 0.95 / 2)  # largeur légèrement plus grande
+        ry = int((y2-y1) * 0.95 / 2)  # hauteur légèrement plus grande
+        cv2.ellipse(mask, (cx, cy), (rx, ry), 0, 0, 360, 255, -1)
         roi[mask == 255] = flou[mask == 255]
     else:
         roi[:] = flou
@@ -107,9 +107,10 @@ FRAME_STEP = 1
 MAX_MISSED = 1
 
 if video_file:
-    # Afficher seulement la vidéo importée
-    st.subheader("Vidéo importée")
-    st.video(video_file)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Vidéo importée")
+        st.video(video_file)  # affichage grand format importé
 
     if st.button("Lancer le floutage"):
         with st.spinner("Traitement en cours..."):
@@ -140,7 +141,6 @@ if video_file:
                 # 🔵 Détection YOLO
                 if frame_id % FRAME_STEP == 0:
                     small = cv2.resize(frame, (640, int(640*h/w)))
-
                     for key, enabled, labels in [
                         ("face", use_face, None),
                         ("alpr", use_alpr, None),
@@ -148,16 +148,13 @@ if video_file:
                     ]:
                         if not enabled:
                             continue
-
                         result = models[key](small, conf=0.4, verbose=False)[0]
                         trackers[key] = []
                         last_bboxes[key] = []
                         missed[key] = []
-
                         for box, cls in zip(result.boxes.xyxy, result.boxes.cls):
                             if labels and models[key].names[int(cls)] not in labels:
                                 continue
-
                             bbox = [
                                 box[0]*w/640,
                                 box[1]*h/small.shape[0],
@@ -180,7 +177,6 @@ if video_file:
                         new_trackers = []
                         new_bboxes = []
                         new_missed = []
-
                         for i, tr in enumerate(trackers[key]):
                             ok, b = tr.update(frame)
                             if ok:
@@ -198,12 +194,10 @@ if video_file:
                                     new_trackers.append(tr)
                                     new_bboxes.append(safe)
                                     new_missed.append(missed[key][i]+1)
-
                         trackers[key] = new_trackers
                         last_bboxes[key] = new_bboxes
                         missed[key] = new_missed
 
-                # écriture et cercle
                 out.write(frame)
                 if frame_id % 10 == 0:
                     p = round((frame_id / total) * 100)
@@ -212,13 +206,14 @@ if video_file:
             cap.release()
             out.release()
 
-            # 🔹 Lire la vidéo finale en bytes pour Streamlit
             with open(out_path, "rb") as f:
                 video_bytes = f.read()
 
             st.success("✅ Traitement terminé")
+            with col2:
+                st.subheader("Après")
+                st.video(video_bytes)
 
-            # 🚫 Suppression de la vidéo "Après" affichée
             st.download_button(
                 "⬇️ Télécharger la vidéo floutée",
                 video_bytes,
