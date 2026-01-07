@@ -210,9 +210,6 @@ if video_file:
                 video_bytes = f.read()
 
             st.success("✅ Traitement terminé")
-            with col2:
-                st.subheader("Après")
-                st.video(video_bytes)
 
             st.download_button(
                 "⬇️ Télécharger la vidéo floutée",
