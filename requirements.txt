@@ -5,3 +5,4 @@ numpy
 moviepy
 imageio
 imageio-ffmpeg
+plotly
