@@ -8,7 +8,7 @@ import numpy as np
 # =========================
 # CONFIG STREAMLIT
 # =========================
-st.set_page_config(page_title="🎥 Floutage Vidéo Intelligent", layout="wide")
+st.set_page_config(page_title="Floutage Vidéo Intelligent", layout="wide")
 
 st.markdown("""
 <style>
@@ -22,7 +22,7 @@ button[kind="primary"] { background: linear-gradient(135deg, #80bfff, #3399ff) !
 # =========================
 # TITRE
 # =========================
-st.title("🎥 Floutage automatique de vidéo")
+st.title("Floutage automatique de vidéo")
 st.write("Floutez vos **visages**, **plaques** et **écrans** facilement")
 
 # =========================
@@ -42,7 +42,7 @@ OBJETS_COCO = ["laptop", "cell phone", "tv"]
 # =========================
 # OPTIONS
 # =========================
-st.sidebar.title("⚙️ Options")
+st.sidebar.title("Options : ")
 use_face = st.sidebar.checkbox("Flouter les visages", True)
 use_alpr = st.sidebar.checkbox("Flouter les plaques", True)
 use_coco = st.sidebar.checkbox("Flouter les écrans", True)
@@ -82,7 +82,6 @@ def flouter_roi(frame, bbox, intensite, ellipse=False):
         roi[:] = flou
 
 def cercle_progression(p):
-    # Cercle stable avec pourcentage au centre
     values = [p, 100-p]
     fig = go.Figure(go.Pie(
         values=values,
@@ -108,10 +107,9 @@ FRAME_STEP = 1
 MAX_MISSED = 1
 
 if video_file:
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Avant")
-        st.video(video_file)
+    # Afficher seulement la vidéo importée
+    st.subheader("Vidéo importée")
+    st.video(video_file)
 
     if st.button("Lancer le floutage"):
         with st.spinner("Traitement en cours..."):
@@ -220,10 +218,7 @@ if video_file:
 
             st.success("✅ Traitement terminé")
 
-            with col2:
-                st.subheader("Après")
-                st.video(video_bytes)  # Affichage vidéo finale
-
+            # 🚫 Suppression de la vidéo "Après" affichée
             st.download_button(
                 "⬇️ Télécharger la vidéo floutée",
                 video_bytes,
