@@ -8,7 +8,7 @@ import numpy as np
 # =========================
 # CONFIG STREAMLIT
 # =========================
-st.set_page_config(page_title="🎥 Floutage Vidéo Intelligent", layout="wide")
+st.set_page_config(page_title="Floutage Vidéo Intelligent", layout="wide")
 
 st.markdown("""
 <style>
@@ -22,7 +22,7 @@ button[kind="primary"] { background: linear-gradient(135deg, #80bfff, #3399ff) !
 # =========================
 # TITRE
 # =========================
-st.title("🎥 Floutage automatique de vidéo")
+st.title("Floutage automatique de vidéo")
 st.write("Floutez vos **visages**, **plaques** et **écrans** facilement")
 
 # =========================
@@ -42,7 +42,7 @@ OBJETS_COCO = ["laptop", "cell phone", "tv"]
 # =========================
 # OPTIONS
 # =========================
-st.sidebar.title("⚙️ Options")
+st.sidebar.title("Options : ")
 use_face = st.sidebar.checkbox("Flouter les visages", True)
 use_alpr = st.sidebar.checkbox("Flouter les plaques", True)
 use_coco = st.sidebar.checkbox("Flouter les écrans", True)
@@ -108,7 +108,7 @@ MAX_MISSED = 1
 
 if video_file:
     # Afficher seulement la vidéo importée
-    st.subheader("🎬 Vidéo importée")
+    st.subheader("Vidéo importée")
     st.video(video_file)
 
     if st.button("Lancer le floutage"):
