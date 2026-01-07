@@ -108,10 +108,10 @@ FRAME_STEP = 1
 MAX_MISSED = 1
 
 if video_file:
-    # On crée une seule colonne pour la vidéo uploadée
-    st.subheader("🎬 Vidéo importée")
-    st.video(video_file)
-
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Avant")
+        st.video(video_file)
 
     if st.button("Lancer le floutage"):
         with st.spinner("Traitement en cours..."):
