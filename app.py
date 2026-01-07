@@ -4,7 +4,6 @@ from ultralytics import YOLO
 import tempfile
 import plotly.graph_objects as go
 import numpy as np
-import os
 
 # =========================
 # CONFIG STREAMLIT
@@ -104,19 +103,17 @@ def cercle_progression(p):
 # =========================
 # TRAITEMENT
 # =========================
-FRAME_STEP = 3
-MAX_MISSED = 3
+FRAME_STEP = 1
+MAX_MISSED = 1
 
 if video_file:
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Avant")
-        # ↓ Vidéo réduite en width
-        st.video(video_file, width=480)
+    # Afficher seulement la vidéo importée
+    st.subheader("🎬 Vidéo importée")
+    st.video(video_file)
 
     if st.button("Lancer le floutage"):
         with st.spinner("Traitement en cours..."):
-            temp_in = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+            temp_in = tempfile.NamedTemporaryFile(delete=False)
             temp_in.write(video_file.read())
             temp_in.close()
 
@@ -125,7 +122,7 @@ if video_file:
             fps = cap.get(cv2.CAP_PROP_FPS)
             total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-            out_path = os.path.join(tempfile.gettempdir(), "video_floutee.mp4")
+            out_path = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False).name
             out = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
             trackers = {"face": [], "alpr": [], "coco": []}
@@ -177,7 +174,7 @@ if video_file:
                                 last_bboxes[key].append(safe)
                                 missed[key].append(0)
 
-                # 🔵 Tracking
+                # 🔵 Tracking avec persistance
                 else:
                     for key in trackers:
                         new_trackers = []
@@ -206,7 +203,7 @@ if video_file:
                         last_bboxes[key] = new_bboxes
                         missed[key] = new_missed
 
-                # 🔵 Écriture + Cercle
+                # écriture et cercle
                 out.write(frame)
                 if frame_id % 10 == 0:
                     p = round((frame_id / total) * 100)
@@ -215,17 +212,15 @@ if video_file:
             cap.release()
             out.release()
 
+            # 🔹 Lire la vidéo finale en bytes pour Streamlit
+            with open(out_path, "rb") as f:
+                video_bytes = f.read()
+
             st.success("✅ Traitement terminé")
 
-            # ↓ Affichage final avec width réduit
-            with col2:
-                st.subheader("Après")
-                st.video(out_path, width=480)
-
-            # ↓ Téléchargement
-            with open(out_path, "rb") as f:
-                st.download_button(
-                    "⬇️ Télécharger la vidéo floutée",
-                    f,
-                    "video_floutee.mp4"
-                )
+            # 🚫 Suppression de la vidéo "Après" affichée
+            st.download_button(
+                "⬇️ Télécharger la vidéo floutée",
+                video_bytes,
+                "video_floutee.mp4"
+            )
