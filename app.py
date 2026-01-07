@@ -42,7 +42,7 @@ OBJETS_COCO = ["laptop", "cell phone", "tv"]
 # =========================
 # OPTIONS
 # =========================
-st.sidebar.title("Options")
+st.sidebar.title("⚙️ Options")
 use_face = st.sidebar.checkbox("Flouter les visages", True)
 use_alpr = st.sidebar.checkbox("Flouter les plaques", True)
 use_coco = st.sidebar.checkbox("Flouter les écrans", True)
