@@ -116,7 +116,7 @@ def cercle_progression(p):
 # TRAITEMENT
 # =========================
 FRAME_STEP = 1
-MAX_MISSED = 1
+MAX_MISSED = 5
 
 if video_file:
     col1, col2 = st.columns(2)
