@@ -115,7 +115,7 @@ def cercle_progression(p):
 # =========================
 # TRAITEMENT
 # =========================
-FRAME_STEP = 1
+FRAME_STEP = 2
 MAX_MISSED = 5
 
 if video_file:
