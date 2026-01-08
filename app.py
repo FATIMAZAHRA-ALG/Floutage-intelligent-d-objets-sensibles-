@@ -66,16 +66,28 @@ def clamp_bbox(bbox, shape):
 
 def flouter_roi(frame, bbox, intensite, ellipse=False):
     x1, y1, x2, y2 = bbox
+    
+    # AJOUT : Marge de sécurité de 10% pour ne rien rater sur les bords
+    h_extra = int((y2 - y1) * 0.10)
+    w_extra = int((x2 - x1) * 0.10)
+    
+    x1 = max(0, x1 - w_extra)
+    y1 = max(0, y1 - h_extra)
+    x2 = min(frame.shape[1], x2 + w_extra)
+    y2 = min(frame.shape[0], y2 + h_extra)
+    
     roi = frame[y1:y2, x1:x2]
     if roi.size == 0:
         return
+
+    # Intensité augmentée pour un flou impénétrable
     k = max(15, ((x2-x1)//3)|1) * intensite
     flou = cv2.GaussianBlur(roi, (k, k), 0)
+
     if ellipse:
         mask = np.zeros(roi.shape[:2], dtype=np.uint8)
         cx, cy = (x2-x1)//2, (y2-y1)//2
-        rx = int((x2-x1) * 0.95 / 2)  # largeur légèrement plus grande
-        ry = int((y2-y1) * 0.95 / 2)  # hauteur légèrement plus grande
+        rx, ry = int((x2-x1)*0.95/2), int((y2-y1)*0.95/2)
         cv2.ellipse(mask, (cx, cy), (rx, ry), 0, 0, 360, 255, -1)
         roi[mask == 255] = flou[mask == 255]
     else:
@@ -148,7 +160,7 @@ if video_file:
                     ]:
                         if not enabled:
                             continue
-                        result = models[key](small, conf=0.4, verbose=False)[0]
+                        result = models[key](small, conf=0.25, verbose=False)[0]
                         trackers[key] = []
                         last_bboxes[key] = []
                         missed[key] = []
