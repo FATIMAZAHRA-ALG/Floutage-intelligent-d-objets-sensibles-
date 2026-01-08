@@ -176,7 +176,7 @@ if video_file:
                             safe = clamp_bbox(bbox, frame.shape)
                             if safe:
                                 flouter_roi(frame, safe, intensite_flou, ellipse=(key=="face"))
-                                tracker = cv2.TrackerCSRT_create()
+                                tracker = cv2.TrackerKCF_create()
                                 x1,y1,x2,y2 = safe
                                 tracker.init(frame, (x1,y1,x2-x1,y2-y1))
                                 trackers[key].append(tracker)
